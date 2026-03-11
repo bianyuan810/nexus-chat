@@ -1,7 +1,7 @@
 # Nexus Chat (极速社交助手) - 产品需求文档
 
 ## Overview
-- **Summary**: 基于Nuxt3 + Vue3构建的实时聊天应用，提供邮箱注册登录、联系人列表查看、文本消息发送和接收功能，消息持久化存储。
+- **Summary**: 基于Nuxt4 + Vue3构建的实时聊天应用，提供邮箱注册登录、联系人列表查看、文本消息发送和接收功能，消息持久化存储。
 - **Purpose**: 实现高效、稳定的即时通讯与社交网络，提供流畅的消息传递体验。
 - **Target Users**: 需要实时通讯功能的个人用户。
 
@@ -46,7 +46,7 @@
 - **NFR-3**: 系统可维护性：清晰的分层设计，确保职责分离和代码可维护性
 
 ## Constraints
-- **Technical**: 使用Nuxt3 + Vue3构建前端，使用Supabase作为后端服务
+- **Technical**: 使用Nuxt4 + Vue3构建前端，使用Supabase作为后端服务
 - **Business**: V1版本仅支持核心功能，不包含高级特性
 - **Dependencies**: 依赖Supabase提供的PostgreSQL数据库、身份验证和实时消息推送功能
 
@@ -98,6 +98,6 @@
 - [x] 如何处理用户注销功能？
   - 基于Supabase Auth的注销功能：使用Supabase Auth提供的`signOut`方法，自动处理令牌清除和会话终止，然后重定向到登录页面
 - [x] 如何处理会话管理？
-  - 基于Nuxt3中间件 + Supabase Auth的会话管理：使用Nuxt3的中间件功能，结合Supabase Auth的会话管理，在路由切换时自动验证会话状态，确保受保护路由只能由已登录用户访问
+  - 基于Nuxt4中间件 + Supabase Auth的会话管理：使用Nuxt4的中间件功能，结合Supabase Auth的会话管理，在路由切换时自动验证会话状态，确保受保护路由只能由已登录用户访问
 - [x] 如何实现消息的实时推送？
   - 基于Supabase Realtime的消息实时推送：使用Supabase Realtime服务，在客户端订阅消息表的变更，当有新消息时自动接收并更新UI

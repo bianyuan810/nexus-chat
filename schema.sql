@@ -17,13 +17,6 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Enable RLS for users table
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-
--- RLS policy for users: users can only access their own data
-CREATE POLICY "Users can only access their own data" ON users
-    FOR ALL USING (id = auth.uid());
-
 -- Create index on users email
 CREATE INDEX IF NOT EXISTS idx_users_email
     ON users(email);
@@ -40,19 +33,6 @@ CREATE TABLE IF NOT EXISTS conversations (
     )
 );
 
--- Enable RLS for conversations table
-ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
-
--- RLS policy for conversations: users can only access conversations they are members of
-CREATE POLICY "Users can only access their own conversations" ON conversations
-    FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM members
-            WHERE members.conversation_id = conversations.id
-            AND members.user_id = auth.uid()
-        )
-    );
-
 -- Members table (join table between users and conversations)
 CREATE TABLE IF NOT EXISTS members (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -63,8 +43,62 @@ CREATE TABLE IF NOT EXISTS members (
     UNIQUE(user_id, conversation_id)
 );
 
--- Enable RLS for members table
+-- Create index on members table
+CREATE INDEX IF NOT EXISTS idx_members_user_conversation
+    ON members(user_id, conversation_id);
+
+-- Messages table
+CREATE TABLE IF NOT EXISTS messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    content TEXT NOT NULL,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE SET NULL,
+    conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    reply_to_id UUID REFERENCES messages(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Create composite index on messages table for better performance
+CREATE INDEX IF NOT EXISTS idx_messages_conversation_created_at
+    ON messages(conversation_id, created_at);
+
+-- Message read status table
+CREATE TABLE IF NOT EXISTS message_read_status (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    message_id UUID NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    read_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(message_id, user_id)
+);
+
+-- Message mentions table
+CREATE TABLE IF NOT EXISTS message_mentions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    message_id UUID NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Enable RLS for all tables
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE message_read_status ENABLE ROW LEVEL SECURITY;
+ALTER TABLE message_mentions ENABLE ROW LEVEL SECURITY;
+
+-- RLS policy for users: users can only access their own data
+CREATE POLICY "Users can only access their own data" ON users
+    FOR ALL USING (id = auth.uid());
+
+-- RLS policy for conversations: users can only access conversations they are members of
+CREATE POLICY "Users can only access their own conversations" ON conversations
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM members
+            WHERE members.conversation_id = conversations.id
+            AND members.user_id = auth.uid()
+        )
+    );
 
 -- RLS policy for members: users can view their own memberships
 CREATE POLICY "Users can view their own memberships" ON members
@@ -81,23 +115,6 @@ CREATE POLICY "Admins can manage group members" ON members
         )
     );
 
--- Create index on members table
-CREATE INDEX IF NOT EXISTS idx_members_user_conversation
-    ON members(user_id, conversation_id);
-
--- Messages table
-CREATE TABLE IF NOT EXISTS messages (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    content TEXT NOT NULL,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE SET NULL,
-    conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
-    reply_to_id UUID REFERENCES messages(id) ON DELETE SET NULL,
-    created_at TIMESTAMPTZ DEFAULT now()
-);
-
--- Enable RLS for messages table
-ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
-
 -- RLS policy for messages: users can only access messages in conversations they are members of
 CREATE POLICY "Users can only access messages in their conversations" ON messages
     FOR ALL USING (
@@ -108,36 +125,9 @@ CREATE POLICY "Users can only access messages in their conversations" ON message
         )
     );
 
--- Create composite index on messages table for better performance
-CREATE INDEX IF NOT EXISTS idx_messages_conversation_created_at
-    ON messages(conversation_id, created_at);
-
--- Message read status table
-CREATE TABLE IF NOT EXISTS message_read_status (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    message_id UUID NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    read_at TIMESTAMPTZ DEFAULT now(),
-    UNIQUE(message_id, user_id)
-);
-
--- Enable RLS for message_read_status table
-ALTER TABLE message_read_status ENABLE ROW LEVEL SECURITY;
-
 -- RLS policy for message_read_status: users can only access their own read status
 CREATE POLICY "Users can only access their own read status" ON message_read_status
     FOR ALL USING (user_id = auth.uid());
-
--- Message mentions table
-CREATE TABLE IF NOT EXISTS message_mentions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    message_id UUID NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    created_at TIMESTAMPTZ DEFAULT now()
-);
-
--- Enable RLS for message_mentions table
-ALTER TABLE message_mentions ENABLE ROW LEVEL SECURITY;
 
 -- RLS policy for message_mentions: users can only access mentions in their conversations
 CREATE POLICY "Users can only access mentions in their conversations" ON message_mentions

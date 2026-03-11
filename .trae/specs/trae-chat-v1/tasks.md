@@ -1,10 +1,10 @@
 # Nexus Chat (极速社交助手) - 实现计划
 
-## [ ] Task 1: 项目初始化与基础架构搭建
+## [x] Task 1: 项目初始化与基础架构搭建
 - **Priority**: P0
 - **Depends On**: None
 - **Description**:
-  - 初始化Nuxt3项目
+  - 初始化Nuxt4项目
   - 配置Supabase连接
   - 搭建项目目录结构
   - 配置基础路由
@@ -14,7 +14,7 @@
   - `programmatic` TR-1.2: Supabase连接配置正确
 - **Notes**: 按照目录约定创建app/、components/、services/、db/目录
 
-## [ ] Task 2: 数据库设计与迁移
+## [x] Task 2: 数据库设计与迁移
 - **Priority**: P0
 - **Depends On**: Task 1
 - **Description**:
@@ -27,25 +27,25 @@
   - `programmatic` TR-2.2: RLS策略配置正确
 - **Notes**: 确保所有表启用RLS，默认"只能访问自己的数据"
 
-## [ ] Task 3: 身份验证模块实现
+## [x] Task 3: 身份验证模块实现
 - **Priority**: P0
 - **Depends On**: Task 2
 - **Description**:
   - 实现邮箱注册功能
   - 实现邮箱登录功能
   - 实现用户注销功能（基于Supabase Auth）
-  - 实现会话管理（基于Nuxt3中间件 + Supabase Auth）
+  - 实现会话管理（基于Nuxt4中间件 + Supabase Auth）
   - 实现JWT令牌管理
 - **Acceptance Criteria Addressed**: AC-1, AC-2
 - **Test Requirements**:
   - `programmatic` TR-3.1: POST /api/auth/register 接口能成功创建用户
   - `programmatic` TR-3.2: POST /api/auth/login 接口能成功返回JWT令牌
   - `programmatic` TR-3.3: 调用Supabase Auth的signOut方法能成功注销用户
-  - `programmatic` TR-3.4: Nuxt3中间件能正确验证会话状态
+  - `programmatic` TR-3.4: Nuxt4中间件能正确验证会话状态
   - `human-judgment` TR-3.5: 登录/注册页面UI美观易用
 - **Notes**: 前端只使用anon key，认证操作走服务端route
 
-## [ ] Task 4: 联系人列表模块实现
+## [x] Task 4: 联系人列表模块实现
 - **Priority**: P1
 - **Depends On**: Task 3
 - **Description**:
@@ -58,7 +58,7 @@
   - `human-judgment` TR-4.2: 联系人列表页面显示正确
 - **Notes**: 联系人列表基于用户参与的会话
 
-## [ ] Task 5: 消息发送与接收模块实现
+## [x] Task 5: 消息发送与接收模块实现
 - **Priority**: P0
 - **Depends On**: Task 4
 - **Description**:
@@ -74,7 +74,7 @@
   - `human-judgment` TR-5.4: 消息发送和接收流程流畅
 - **Notes**: 消息查询必须带conversation_id过滤，并且必须分页（默认50条/页）
 
-## [ ] Task 6: 实时消息推送实现
+## [x] Task 6: 实时消息推送实现
 - **Priority**: P1
 - **Depends On**: Task 5
 - **Description**:
@@ -87,7 +87,7 @@
   - `human-judgment` TR-6.2: 实时消息推送功能正常工作
 - **Notes**: 实时订阅只做增量更新，禁止重复订阅
 
-## [ ] Task 7: 系统测试与优化
+## [x] Task 7: 系统测试与优化
 - **Priority**: P1
 - **Depends On**: Task 6
 - **Description**:
