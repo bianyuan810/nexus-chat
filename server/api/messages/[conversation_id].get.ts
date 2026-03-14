@@ -1,11 +1,11 @@
 import { getQuery, getRouterParam } from 'h3'
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
+import {  serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 export default defineEventHandler(async (event) => {
 
   
   try {
     const user = await serverSupabaseUser(event)
-    const supabase = await serverSupabaseClient(event)
+    const supabase = await serverSupabaseServiceRole(event)
 
     if (!user) {
       return {
@@ -41,7 +41,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Check if user is a member of the conversation
-    const { data: membership, error: membershipError } = await supabase
+    const { data: _membership, error: membershipError } = await supabase
       .from('members')
       .select('id')
       .eq('user_id', user.sub)
@@ -99,6 +99,7 @@ export default defineEventHandler(async (event) => {
       data: reversedMessages
     }
   } catch (error) {
+    console.error('Error fetching messages:', error)
     return {
       ok: false,
       error: {

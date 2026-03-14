@@ -1,4 +1,4 @@
-import { serverSupabaseClient, serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import {  serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 
 type ConversationMember = {
   conversation_id: string

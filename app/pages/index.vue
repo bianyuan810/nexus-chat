@@ -53,7 +53,7 @@
           <div class="contact-name">{{ selectedContact.name }}</div>
         </div>
       </div>
-      <div class="chat-messages">
+      <div class="chat-messages" ref="chatMessagesRef">
         <div v-if="loadingMessages" class="loading">加载消息中...</div>
         <div v-else-if="messagesError" class="error">{{ messagesError }}</div>
         <div v-else-if="messages.length === 0" class="message-placeholder">
@@ -102,12 +102,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, onUnmounted } from 'vue'
+import { ref, onMounted, watch, onUnmounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
 const supabase = useSupabaseClient()
+const chatMessagesRef = ref<HTMLElement | null>(null)
 
 interface Contact {
   id: string
@@ -157,6 +158,7 @@ const fetchContacts = async () => {
     
     if (data.ok) {
       contacts.value = data.data
+      
     } else {
       error.value = data.error.message || '获取联系人失败'
     }
@@ -174,8 +176,12 @@ const fetchMessages = async (conversationId: string) => {
     messagesError.value = ''
     const response = await fetch(`/api/messages/${conversationId}`)
     const data = await response.json()
+    console.log('获取消息:',data.data);
+    
     if (data.ok) {
       messages.value = data.data
+      
+      await scrollToBottom()
     } else {
       messagesError.value = data.error.message
     }
@@ -248,6 +254,7 @@ const setupRealtimeSubscription = (conversationId: string) => {
             avatar_url: ''
           }
         })
+        scrollToBottom()
       }
     })
     .subscribe()
@@ -285,6 +292,13 @@ const formatTime = (timestamp: string) => {
     hour: '2-digit',
     minute: '2-digit'
   })
+}
+
+const scrollToBottom = async () => {
+  await nextTick()
+  if (chatMessagesRef.value) {
+    chatMessagesRef.value.scrollTop = chatMessagesRef.value.scrollHeight
+  }
 }
 
 const getCurrentUser = async () => {
@@ -507,8 +521,8 @@ onMounted(async () => {
   overflow-y: auto;
   padding: 1rem;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .message-placeholder {
@@ -552,12 +566,16 @@ onMounted(async () => {
 
 .message {
   display: flex;
+  flex-direction: column;
   margin-bottom: 1rem;
   align-items: flex-start;
+  width: 100%;
+  max-width: 70%;
 }
 
 .own-message {
-  flex-direction: row-reverse;
+  align-items: flex-end;
+  margin-left: auto;
 }
 
 .message-avatar {
@@ -565,7 +583,7 @@ onMounted(async () => {
   height: 36px;
   border-radius: 50%;
   overflow: hidden;
-  margin: 0 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .message-avatar img {

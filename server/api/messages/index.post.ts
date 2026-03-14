@@ -1,71 +1,72 @@
-import { readBody } from 'h3'
-import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
+import { readBody } from "h3";
+import { serverSupabaseClient, serverSupabaseUser } from "#supabase/server";
+import type { Database } from "@@/types/supabase";
 export default defineEventHandler(async (event) => {
-
   try {
-    const user = await serverSupabaseUser(event)
-    const supabase = await serverSupabaseClient(event)
+    const user = await serverSupabaseUser(event);
+    const supabase = await serverSupabaseClient<Database>(event);
 
     if (!user) {
       return {
         ok: false,
         error: {
-          code: 'UNAUTHORIZED',
-          message: 'User not authenticated'
-        }
-      }
+          code: "UNAUTHORIZED",
+          message: "User not authenticated",
+        },
+      };
     }
-    
+
     if (!user.sub) {
       return {
         ok: false,
         error: {
-          code: 'INVALID_USER_ID',
-          message: 'User ID is missing'
-        }
-      }
+          code: "INVALID_USER_ID",
+          message: "User ID is missing",
+        },
+      };
     }
 
-    const body = await readBody(event)
-    const { content, conversation_id } = body
+    const body = await readBody(event);
+    const { content, conversation_id } = body;
 
     if (!content || !conversation_id) {
       return {
         ok: false,
         error: {
-          code: 'MISSING_FIELDS',
-          message: 'Content and conversation_id are required'
-        }
-      }
+          code: "MISSING_FIELDS",
+          message: "Content and conversation_id are required",
+        },
+      };
     }
 
     // Check if user is a member of the conversation
-    const { data: membership, error: membershipError } = await supabase
-      .from('members')
-      .select('id')
-      .eq('user_id', user.sub)
-      .eq('conversation_id', conversation_id)
-      .single()
+    const { data: _membership, error: membershipError } = await supabase
+      .from("members")
+      .select("id")
+      .eq("user_id", user.sub)
+      .eq("conversation_id", conversation_id)
+      .single();
 
     if (membershipError) {
       return {
         ok: false,
         error: {
-          code: 'FORBIDDEN',
-          message: 'You are not a member of this conversation'
-        }
-      }
+          code: "FORBIDDEN",
+          message: "You are not a member of this conversation",
+        },
+      };
     }
 
     // Insert message into database
     const { data: message, error: messageError } = await supabase
-      .from('messages')
+      .from("messages")
       .insert({
         content,
         user_id: user.sub,
-        conversation_id
+        conversation_id,
       })
-      .select(`
+      .select(
+        `
         id,
         content,
         user_id,
@@ -77,30 +78,32 @@ export default defineEventHandler(async (event) => {
           email,
           avatar_url
         )
-      `)
-      .single()
+      `,
+      )
+      .single();
 
     if (messageError) {
       return {
         ok: false,
         error: {
-          code: 'DATABASE_ERROR',
-          message: messageError.message
-        }
-      }
+          code: "DATABASE_ERROR",
+          message: messageError.message,
+        },
+      };
     }
 
     return {
       ok: true,
-      data: message
-    }
+      data: message,
+    };
   } catch (error) {
+    console.error("Error posting message:", error);
     return {
       ok: false,
       error: {
-        code: 'SERVER_ERROR',
-        message: 'Internal server error'
-      }
-    }
+        code: "SERVER_ERROR",
+        message: "Internal server error",
+      },
+    };
   }
-})
+});

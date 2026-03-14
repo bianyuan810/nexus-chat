@@ -1,8 +1,9 @@
 import { readBody } from "h3";
 import { serverSupabaseServiceRole } from "#supabase/server";
+import type { Database } from "@@/types/supabase";
 
 export default defineEventHandler(async (event) => {
-  const supabaseService = serverSupabaseServiceRole(event);
+  const supabaseService = serverSupabaseServiceRole<Database>(event);
   try {
     const body = await readBody(event);
     const { email, password, name } = body;

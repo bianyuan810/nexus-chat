@@ -1,5 +1,5 @@
 import {  serverSupabaseServiceRole, serverSupabaseUser } from "#supabase/server";
-
+import type { Database } from "@@/types/supabase";
 type User = {
   id: string;
   name: string | null;
@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
   
   try {
     const user = await serverSupabaseUser(event);
-    const supabase = await serverSupabaseServiceRole(event);
+    const supabase = await serverSupabaseServiceRole<Database>(event);
 
     if (!user) {
       return {
